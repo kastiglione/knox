@@ -1,12 +1,12 @@
 # knox
 
-Observability and introspection via macOS auditing (Basic Security Module aka BSM)
+Repurpose system auditing for non-security uses. Observability and introspection into processes and their lifecycle, granular file access, sources and causes of errors, networking calls, and more. Based on macOS auditing: Basic Security Module (aka BSM)
 
 ## Introduction
 
 macOS has a system library called `libbsm`, which is a lesser known API for security auditing and monitoring. This same data is potentially useful for much more. Like what exactly? Well, that's why this repo exists -- to explore the possibilities and to provide tools, libraries, and documentation for working with `libbsm`.
 
-Some interesting uses for `libbsm` are: observing and reacting to process lifecycle, file access, and visibility into errors. This kind of data has been available via `dtrace`, using `libbsm` is still interesting because it has different programming ergonomics, and has different tradeoffs.
+Some interesting uses for `libbsm` are: observing and reacting to process lifecycle, visualizing file access across the life of a process, visibility of internal process errors, etc. This kind of data has been available via `dtrace`, using `libbsm` is still interesting because it has different programming ergonomics, and has different tradeoffs.
 
 ## Install
 
