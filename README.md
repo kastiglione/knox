@@ -143,4 +143,4 @@ yourusername	ALL = NOPASSWD: /usr/local/bin/auditpipe *
 
 ## Why "knox"
 
-The Audit API types and functions are prefixed with "au", and Au is the chemical symbol for gold. One place to find gold is at Fort Knox. But really, all of this provides a line of reasoning to pay some small homage to my super awesome grandma, who's maiden name was Knox.
+The Audit API types and functions are prefixed with "au", and Au is the chemical symbol for gold. One place to find gold is at Fort Knox. But really, all of this provides a line of reasoning to pay some small homage to my super awesome grandma, whose maiden name was Knox.
