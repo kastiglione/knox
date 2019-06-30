@@ -42,6 +42,10 @@ int main(int argc, char **argv) {
     return usage();
   }
 
+  if (strcmp(argv[1], "-h") || strcmp(argv[1], "--help")) {
+    return usage();
+  }
+
   const auto command = commands.find(argv[1]);
   if (command == commands.end()) {
     fprintf(stderr, "error: unknown command\n");
