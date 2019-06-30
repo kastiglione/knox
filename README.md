@@ -64,7 +64,7 @@ The `auditon` command is a command line interface to the `auditon(2)` API. It's 
 
 ## Documentation
 
-The majority of documentation is in the BSM headers (`bsm/libbsm.h`) and manual pages (see below). The [xnu source](https://opensource.apple.com/tarballs/xnu/) can also be hepful.
+The majority of documentation is in the BSM headers (`bsm/libbsm.h`) and manual pages (see below). Most of the Audit man pages are available only when Xcode is installed. The [xnu source](https://opensource.apple.com/tarballs/xnu/) can also be hepful.
 
 * `man auditpipe`
 * `man audit.log`
