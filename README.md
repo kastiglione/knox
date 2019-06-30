@@ -1,6 +1,6 @@
 # knox
 
-Repurpose system auditing for non-security uses. Observability and introspection into processes and their lifecycle, granular file access, sources and causes of errors, networking calls, and more. Based on macOS auditing: Basic Security Module (aka BSM)
+Tools to repurpose system auditing for non-security uses. Allows observability and introspection into processes and their lifecycle, granular file access, causes or sources of errors, info about networking use, and more. Based on macOS system auditing API ["Basic Security Module" (aka BSM)](https://en.wikipedia.org/wiki/OpenBSM).
 
 ## Introduction
 
