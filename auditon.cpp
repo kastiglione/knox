@@ -16,6 +16,19 @@ enum class Command {
   UNSETCLASS
 };
 
+static auto usage() {
+  fprintf(stderr, "usage: auditon getpolicy\n"
+                  "       auditon setpolicy <policy>\n"
+                  "       auditon unsetpolicy <policy>\n"
+                  "       auditon getmask <pid>\n"
+                  "       auditon setmask <pid> <event-classes>\n"
+                  "       auditon unsetmask <pid> <event-classes>\n"
+                  "       auditon getclass <event-name>\n"
+                  "       auditon setclass <event-name> <event-class>\n"
+                  "       auditon unsetclass <event-name> <event-class>\n");
+  return EXIT_FAILURE;
+}
+
 int main(int argc, char **argv) {
   std::unordered_map<std::string, Command> commands{
       {"getpolicy", Command::GETPOLICY},     {"setpolicy", Command::SETPOLICY},
@@ -25,10 +38,18 @@ int main(int argc, char **argv) {
       {"unsetclass", Command::UNSETCLASS},
   };
 
+  if (argc <= 1) {
+    return usage();
+  }
+
+  if (strcmp(argv[1], "-h") || strcmp(argv[1], "--help")) {
+    return usage();
+  }
+
   const auto command = commands.find(argv[1]);
   if (command == commands.end()) {
     fprintf(stderr, "error: unknown command\n");
-    return EXIT_FAILURE;
+    return usage();
   }
 
   switch (command->second) {
@@ -50,6 +71,11 @@ int main(int argc, char **argv) {
     break;
   }
   case Command::SETPOLICY: {
+    if (argc != 3) {
+      fprintf(stderr, "usage: auditon setpolicy <policy>\n");
+      return EXIT_FAILURE;
+    }
+
     int current_policy;
     if (audit_get_policy(&current_policy)) {
       perror("error");
@@ -70,6 +96,11 @@ int main(int argc, char **argv) {
     break;
   }
   case Command::UNSETPOLICY: {
+    if (argc != 3) {
+      fprintf(stderr, "usage: auditon unsetpolicy <policy>\n");
+      return EXIT_FAILURE;
+    }
+
     int current_policy;
     if (audit_get_policy(&current_policy)) {
       perror("error");
@@ -90,6 +121,11 @@ int main(int argc, char **argv) {
     break;
   }
   case Command::GETMASK: {
+    if (argc != 3) {
+      fprintf(stderr, "usage: auditon getmask <pid>\n");
+      return EXIT_FAILURE;
+    }
+
     auditpinfo_t api;
     api.ap_pid = atoi(argv[2]);
     if (audit_get_pinfo(&api, sizeof(api))) {
@@ -109,6 +145,11 @@ int main(int argc, char **argv) {
     break;
   }
   case Command::SETMASK: {
+    if (argc != 4) {
+      fprintf(stderr, "usage: auditon setmask <pid> <event-classes>\n");
+      return EXIT_FAILURE;
+    }
+
     auditpinfo_t api;
     api.ap_pid = atoi(argv[2]);
     if (audit_get_pinfo(&api, sizeof(api))) {
@@ -131,6 +172,11 @@ int main(int argc, char **argv) {
     break;
   }
   case Command::UNSETMASK: {
+    if (argc != 4) {
+      fprintf(stderr, "usage: auditon unsetmask <pid> <event-classes>\n");
+      return EXIT_FAILURE;
+    }
+
     auditpinfo_t api;
     api.ap_pid = atoi(argv[2]);
     if (audit_get_pinfo(&api, sizeof(api))) {
@@ -153,6 +199,11 @@ int main(int argc, char **argv) {
     break;
   }
   case Command::GETCLASS: {
+    if (argc != 3) {
+      fprintf(stderr, "usage: auditon getclass <event-name>\n");
+      return EXIT_FAILURE;
+    }
+
     au_evclass_map_t evc_map;
     const auto event_name = argv[2];
     auto event_num = getauevnonam(event_name);
@@ -195,6 +246,11 @@ int main(int argc, char **argv) {
     break;
   }
   case Command::SETCLASS: {
+    if (argc != 4) {
+      fprintf(stderr, "usage: auditon setclass <event-name> <event-classes>\n");
+      return EXIT_FAILURE;
+    }
+
     au_evclass_map_t evc_map;
     auto event_num = getauevnonam(argv[2]);
     if (not event_num) {
@@ -223,6 +279,12 @@ int main(int argc, char **argv) {
     break;
   }
   case Command::UNSETCLASS: {
+    if (argc != 4) {
+      fprintf(stderr,
+              "usage: auditon unsetclass <event-name> <event-classes>\n");
+      return EXIT_FAILURE;
+    }
+
     au_evclass_map_t evc_map;
     auto event_num = getauevnonam(argv[2]);
     if (not event_num) {
