@@ -12,10 +12,15 @@ static void printStrings(const T &strings, const char *term) {
 }
 
 int main(int argc, char **argv) {
+  FILE *input = stdin;
+  if (argc > 1) {
+    input = fopen(argv[1], "r");
+  }
+
   while (true) {
     // Read an audit event, which is a buffer of tokens.
     u_char *buffer = nullptr;
-    const auto record_size = au_read_rec(stdin, &buffer);
+    const auto record_size = au_read_rec(input, &buffer);
     if (record_size == 0) {
       // End of input.
       break;
