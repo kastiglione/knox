@@ -46,12 +46,13 @@ sudo auditpipe -fr,-fw | praudit -lx | grep /Users/me
 
 ### `commands`
 
-Prints the command lines for all processes. Command lines are available in `AUE_EXECVE` and `AUE_POSIX_SPAWN` events. The `commands` tool reads from either `auditpipe` or from `/var/audit` logs.
+If you ever need to see which commands are being run by other processes, this is the tool to do that. Prints the command lines for all processes. The `commands` tool reads from either `auditpipe` or from `/var/audit` logs.
 
 #### Examples
 
 ```sh
 sudo auditpipe +pc | commands
+sudo commands /var/audit/current
 ```
 
 ### `auditon`
