@@ -15,6 +15,10 @@ int main(int argc, char **argv) {
   FILE *input = stdin;
   if (argc > 1) {
     input = fopen(argv[1], "r");
+    if (not input) {
+      perror("error");
+      return EXIT_FAILURE;
+    }
   }
 
   while (true) {
