@@ -11,7 +11,7 @@ Some interesting uses for `libbsm` are: observing and reacting to process lifecy
 ## Install
 
 ```sh
-brew install kastiglione/formulae/knox
+brew install --HEAD kastiglione/formulae/knox
 ```
 
 ## Tools
