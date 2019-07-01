@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  while (true) {
+  while (feof(input) == 0) {
     // Read an audit event, which is a buffer of tokens.
     u_char *buffer = nullptr;
     const auto record_size = au_read_rec(input, &buffer);
