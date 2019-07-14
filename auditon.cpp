@@ -1,5 +1,6 @@
 #include <bsm/libbsm.h>
 #include <cstdlib>
+#include <unistd.h>
 
 #include <string>
 #include <unordered_map>
@@ -50,6 +51,17 @@ int main(int argc, char **argv) {
   if (command == commands.end()) {
     fprintf(stderr, "error: unknown command\n");
     return usage();
+  }
+
+  if (geteuid() != 0) {
+    // Re-exec with sudo.
+    char *cmd[argc + 2];
+    cmd[0] = "sudo";
+    for (int i = 0; i < argc; ++i) {
+      cmd[i + 1] = argv[i];
+    }
+    cmd[argc + 1] = nullptr;
+    execvp("sudo", cmd);
   }
 
   switch (command->second) {

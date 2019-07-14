@@ -49,8 +49,9 @@ int main(int argc, char **argv) {
   }
 
   if (geteuid() != 0) {
-    fprintf(stderr, "error: must be run with sudo\n");
-    return EXIT_FAILURE;
+    // Re-exec with sudo.
+    char *cmd[] = {"sudo", argv[0], argv[1], nullptr};
+    execvp("sudo", cmd);
   }
 
   if (isatty(STDOUT_FILENO)) {
