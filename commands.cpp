@@ -5,19 +5,26 @@
 #include <security/audit/audit_ioctl.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <string>
 
-// Print the strings in a given au_execarg_t or au_execenv_t record.
-template <typename T>
-static void printStrings(const T &strings, const char *term) {
-  printf("%s", strings.text[0]);
-  for (auto i = 1; i < strings.count; ++i) {
-    if (strchr(strings.text[i], ' ')) {
-      printf(" \"%s\"", strings.text[i]);
-    } else {
-      printf(" %s", strings.text[i]);
-    }
+static void shellAppend(std::string &string, char* arg) {
+  if (strchr(arg, ' ')) {
+    string.push_back('\"');
+    string.append(arg);
+    string.push_back('"');
+  } else {
+    string.append(arg);
   }
-  printf("%s", term);
+}
+
+static std::string shellJoin(char **strings, int count) {
+  std::string result{};
+  shellAppend(result, strings[0]);
+  for (auto i = 1; i < count; ++i) {
+    result.push_back(' ');
+    shellAppend(result, strings[i]);
+  }
+  return result;
 }
 
 using unique_file_ptr = std::unique_ptr<FILE, decltype(&fclose)>;
@@ -147,9 +154,11 @@ int main(int argc, char **argv) {
     // If the audit tokens had exec args, print them (and optionally env too).
     if (exec_args.count > 0) {
       if (exec_env.count > 0) {
-        printStrings(exec_env, " ");
+        auto env = shellJoin(exec_env.text, exec_env.count);
+        printf("%s ", env.c_str());
       }
-      printStrings(exec_args, "\n");
+      auto args = shellJoin(exec_args.text, exec_args.count);
+      printf("%s\n", args.c_str());
     }
 
     free(buffer);
