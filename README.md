@@ -21,7 +21,7 @@ brew install --HEAD kastiglione/formulae/knox
 Opens and configures the audit event firehose: `/dev/auditpipe`. The `auditpipe` command takes a set of event classes, and writes all matching events to `stdout`. A quick example to consider:
 
 ```sh
-sudo auditpipe pc,fc | praudit -lx
+auditpipe pc,fc | praudit -lx
 ```
 
 Using `praudit` (ships with macOS), this prints process events ("pc" event class) and file creation events ("fc" event class). See [Event Classes](#event-classes) for a list. The process event class includes syscalls such as `fork`, `execve`, `posix_spawn`, `kill`, `exit`, and more. The syscalls and their associated event classes are listed in `/etc/security/audit_event`.
@@ -35,13 +35,13 @@ The complete list of event classes can be found in `/etc/security/audit_classes`
 ##### Print successful process events:
 
 ```sh
-sudo auditpipe +pc | praudit -lx
+auditpipe +pc | praudit -lx
 ```
 
 ##### Print failed file reads and writes, and filters to the given path prefix:
 
 ```sh
-sudo auditpipe -fr,-fw | praudit -lx | grep /Users/me
+auditpipe -fr,-fw | praudit -lx | grep /Users/me
 ```
 
 ### `commands`
@@ -129,11 +129,7 @@ sudo chmod +s auditpipe
 
 #### sudo
 
-Shell aliases can be used to always use `sudo`:
-
-```sh
-alias auditpipe='sudo auditpipe'
-```
+Where necessary, `knox` commands will re-exec with `sudo`, prompting the user to enter their password, if necessary.
 
 To make `sudo auditpipe` require no password, run `sudo visudo` and then add:
 
