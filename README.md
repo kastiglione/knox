@@ -51,8 +51,8 @@ If you ever need to see which commands are being run by other processes, this is
 #### Examples
 
 ```sh
-sudo commands
-sudo commands /var/audit/current
+commands
+commands /var/audit/current
 ```
 
 ### `auditon`
