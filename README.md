@@ -46,12 +46,12 @@ sudo auditpipe -fr,-fw | praudit -lx | grep /Users/me
 
 ### `commands`
 
-If you ever need to see which commands are being run by other processes, this is the tool to do that. Prints the command lines for all processes. The `commands` tool reads from either `auditpipe` or from `/var/audit` logs.
+If you ever need to see which commands are being run by other processes, this is the tool to do that. Prints the command lines for all processes. The `commands` tool reads log files, for example those in `/var/audit`, or if no log file is provided `commands` shows live commands via `/dev/auditpipe`.
 
 #### Examples
 
 ```sh
-sudo auditpipe +pc | commands
+sudo commands
 sudo commands /var/audit/current
 ```
 
