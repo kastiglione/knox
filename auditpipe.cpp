@@ -1,15 +1,3 @@
-/*
-  usage:
-  sudo %s [flags] | praudit
-  sudo %s [flags] > log
-
-  docs:
-  man audit_class audit_event audit_control
-
-  example:
-  sudo %s +pc,fc,-fr | praudit
-*/
-
 #include <bsm/libbsm.h>
 #include <cstdio>
 #include <cstdlib>
@@ -37,7 +25,11 @@ static void stop_running(int _signal) { keep_running = false; }
 
 int main(int argc, char **argv) {
   if (argc != 2 || strcmp(argv[1], "-h") == 0) {
-    fprintf(stderr, "usage: %s <event-classes>\n", argv[0]);
+    fprintf(stderr,
+            "usage:\n"
+            "\t%s <event-classes> | praudit\n"
+            "\t%s <event-classes> > /path/to/log\n",
+            argv[0], argv[0]);
     return EXIT_FAILURE;
   }
 
@@ -50,8 +42,8 @@ int main(int argc, char **argv) {
 
   if (geteuid() != 0) {
     // Re-exec with sudo.
-    char *cmd[] = {"sudo", argv[0], argv[1], nullptr};
-    execvp("sudo", cmd);
+    const char *cmd[] = {"sudo", argv[0], argv[1], nullptr};
+    execvp("sudo", (char **)cmd);
   }
 
   if (isatty(STDOUT_FILENO)) {
