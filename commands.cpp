@@ -11,7 +11,11 @@ template <typename T>
 static void printStrings(const T &strings, const char *term) {
   printf("%s", strings.text[0]);
   for (auto i = 1; i < strings.count; ++i) {
-    printf(" %s", strings.text[i]);
+    if (strchr(strings.text[i], ' ')) {
+      printf(" \"%s\"", strings.text[i]);
+    } else {
+      printf(" %s", strings.text[i]);
+    }
   }
   printf("%s", term);
 }
