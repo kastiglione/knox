@@ -1,6 +1,6 @@
 CXXFLAGS := -Wall -std=c++14 -O2
 
-all: auditon auditpipe commands
+all: auditon auditpipe commands paudit
 
 auditon: auditon.cpp
 	xcrun clang++ $(CXXFLAGS) -lbsm -o $@ auditon.cpp
@@ -10,3 +10,6 @@ auditpipe: auditpipe.cpp
 
 commands: commands.cpp
 	xcrun clang++ $(CXXFLAGS) -lbsm -o $@ commands.cpp
+
+paudit: paudit.cpp
+	xcrun clang++ $(CXXFLAGS) -lbsm -o $@ paudit.cpp
