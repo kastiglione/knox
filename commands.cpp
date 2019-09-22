@@ -1,15 +1,13 @@
 #include <bsm/libbsm.h>
-#include <cstdio>
-#include <cstdlib>
-#include <memory>
+#include <iostream>
 #include <security/audit/audit_ioctl.h>
+#include <string>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <string>
 
 static void shellAppend(std::string &string, char* arg) {
   if (strchr(arg, ' ')) {
-    string.push_back('\"');
+    string.push_back('"');
     string.append(arg);
     string.push_back('"');
   } else {
@@ -18,6 +16,10 @@ static void shellAppend(std::string &string, char* arg) {
 }
 
 static std::string shellJoin(char **strings, int count) {
+  if (count <= 0) {
+    return "";
+  }
+
   std::string result{};
   shellAppend(result, strings[0]);
   for (auto i = 1; i < count; ++i) {
@@ -25,6 +27,15 @@ static std::string shellJoin(char **strings, int count) {
     shellAppend(result, strings[i]);
   }
   return result;
+}
+
+static std::string shellJoin(const std::string &path, char **strings, int count) {
+  if (path.empty()) {
+    return shellJoin(strings, count);
+  }
+
+  auto args = shellJoin(&strings[1], count - 1);
+  return path + ' ' + args;
 }
 
 using unique_file_ptr = std::unique_ptr<FILE, decltype(&fclose)>;
@@ -104,7 +115,7 @@ static unique_file_ptr auditpipe() {
 
 int main(int argc, char **argv) {
   if (argc == 1 && not isatty(STDIN_FILENO)) {
-    fprintf(stderr, "usage: %s [<audit-log>]\n", argv[0]);
+    std::cerr << "usage: " << argv[0] << " [<audit-log>]" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -136,18 +147,30 @@ int main(int argc, char **argv) {
       break;
     }
 
-    au_execarg_t exec_args{};
     au_execenv_t exec_env{};
+    au_path_t path{};
+    au_execarg_t exec_args{};
 
     // Scan through the buffer token by token.
     auto ptr = buffer;
     tokenstr_t tok;
     for (auto left = record_size; left > 0; left -= tok.len, ptr += tok.len) {
       au_fetch_tok(&tok, ptr, left);
-      if (tok.id == AUT_EXEC_ARGS) {
-        exec_args = tok.tt.execarg;
-      } else if (tok.id == AUT_EXEC_ENV) {
+      switch (tok.id) {
+      case AUT_EXEC_ENV:
         exec_env = tok.tt.execenv;
+        break;
+      case AUT_PATH:
+        path = tok.tt.path;
+        break;
+      case AUT_EXEC_ARGS:
+        // Expects the last path to be the final resolved path.
+        //
+        // Audit events can contain more than one `au_path_t` token, and they
+        // appear to show the command path being resolved step by step. From
+        // relative to absolute, and from symlink to real path.
+        exec_args = tok.tt.execarg;
+        break;
       }
     }
 
@@ -155,10 +178,11 @@ int main(int argc, char **argv) {
     if (exec_args.count > 0) {
       if (exec_env.count > 0) {
         auto env = shellJoin(exec_env.text, exec_env.count);
-        printf("%s ", env.c_str());
+        std::cout << env << " ";
       }
-      auto args = shellJoin(exec_args.text, exec_args.count);
-      printf("%s\n", args.c_str());
+      std::string full_path{path.path, path.len};
+      auto args = shellJoin(full_path, exec_args.text, exec_args.count);
+      std::cout << args << std::endl;
     }
 
     free(buffer);
