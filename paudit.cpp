@@ -3,32 +3,76 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string>
+#include <sys/sysctl.h>
 #include <unistd.h>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 static pid_t
-_eventPid(const std::unordered_multimap<u_char, tokenstr_t> &tokens) {
-  // Generally the pid comes from the subject token. However for posix_spawn,
-  // the subject pid is the parent process, the one that called posix_spawn. The
-  // child pid comes from one of the arg tokens, the one named "child PID".
-  for (auto it = tokens.find(AUT_ARG32); it != tokens.end(); ++it) {
+_childPid(const std::unordered_multimap<u_char, tokenstr_t> &tokens) {
+  // For posix_spawn, the subject pid is the parent process. The child pid comes
+  // from one of the arg token named "child PID".
+  auto range = tokens.equal_range(AUT_ARG32);
+  for (auto it = range.first; it != range.second; ++it) {
     auto &arg = it->second.tt.arg32;
     if (arg.len > 0 && strcmp(arg.text, "child PID") == 0) {
       return arg.val;
     }
   }
 
-  for (auto it = tokens.find(AUT_SUBJECT32); it != tokens.end(); ++it) {
-    return it->second.tt.subj32.pid;
+  return 0;
+}
+
+static std::vector<pid_t>
+_eventPids(const std::unordered_multimap<u_char, tokenstr_t> &tokens) {
+  std::vector<pid_t> pids;
+
+  {
+    auto range = tokens.equal_range(AUT_PROCESS32);
+    for (auto it = range.first; it != range.second; ++it) {
+      pids.push_back(it->second.tt.proc32.pid);
+    }
   }
 
-  return 0;
+  {
+    auto range = tokens.equal_range(AUT_SUBJECT32);
+    for (auto it = range.first; it != range.second; ++it) {
+      pids.push_back(it->second.tt.subj32.pid);
+    }
+  }
+
+  return pids;
+}
+
+static char *_pidExecPath(pid_t pid) {
+  int argmax_mib[] = {CTL_KERN, KERN_ARGMAX};
+  int argmax = ARG_MAX;
+  auto argmax_size = sizeof(size_t);
+  if (sysctl(argmax_mib, 2, &argmax, &argmax_size, NULL, 0) != 0) {
+    return nullptr;
+  }
+
+  char *procargs = (char *)malloc(argmax);
+
+  int procargs_mib[] = {CTL_KERN, KERN_PROCARGS2, pid};
+  size_t procargs_size = argmax;
+  if (sysctl(procargs_mib, 3, procargs, &procargs_size, NULL, 0) != 0) {
+    // Can happen if the pid is already gone.
+    return nullptr;
+  }
+
+  // Skip past argc count.
+  procargs += sizeof(int);
+  auto *exec_path = procargs;
+
+  return exec_path;
 }
 
 int main(int argc, char **argv) {
   std::unordered_set<std::string> watchedCommands{argv + 1, argv + argc};
   std::unordered_set<pid_t> watchedPids{};
+  std::unordered_set<pid_t> ignoredPids{};
 
   std::unordered_multimap<u_char, tokenstr_t> tokens;
   auto input = stdin;
@@ -50,43 +94,44 @@ int main(int argc, char **argv) {
       cursor += token.len;
     }
 
-    for (const auto &pair : tokens) {
-      const auto &token = pair.second;
-      bool match = false;
+    bool watched = false;
+    for (auto pid : _eventPids(tokens)) {
+      if (watchedPids.find(pid) != watchedPids.end()) {
+        watched = true;
+      }
+      else if (ignoredPids.find(pid) == ignoredPids.end()) {
+        auto exec_path = _pidExecPath(pid);
+        if (not exec_path) {
+          // No exec_path can mean that the process no longer exists.
+          // TODO: Lookup existing pids at start, so that they're already known.
+          continue;
+        }
 
-      switch (token.id) {
-      case AUT_EXEC_ARGS: {
-        auto &exec_arg = token.tt.execarg;
-        auto command = basename(exec_arg.text[0]);
+        auto command = basename(exec_path);
         if (watchedCommands.find(command) != watchedCommands.end()) {
-          auto pid = _eventPid(tokens);
-#ifdef DEBUG
-          fprintf(stderr, "found: %s (%d)\n", exec_arg.text[0], pid);
-#endif
+          watched = true;
           watchedPids.insert(pid);
-          match = true;
+        } else {
+          ignoredPids.insert(pid);
         }
-        break;
       }
-      case AUT_SUBJECT32: {
-        auto &subject = token.tt.subj32;
-        if (watchedPids.find(subject.pid) != watchedPids.end()) {
-          match = true;
-        }
-        break;
-      }
-      case AUT_PROCESS32:
-        auto &process = token.tt.proc32;
-        if (watchedPids.find(process.pid) != watchedPids.end()) {
-          match = true;
-        }
-        break;
-      }
+    }
 
-      if (match) {
-        write(STDOUT_FILENO, buffer, record_size);
-        break;
+    auto range = tokens.equal_range(AUT_EXEC_ARGS);
+    for (auto it = range.first; it != range.second; ++it) {
+      auto &exec_args = it->second.tt.execarg;
+      auto command = basename(exec_args.text[0]);
+      if (watchedCommands.find(command) != watchedCommands.end()) {
+        watched = true;
+        auto pid = _childPid(tokens);
+        if (pid != 0) {
+          watchedPids.insert(_childPid(tokens));
+        }
       }
+    }
+
+    if (watched) {
+      write(STDOUT_FILENO, buffer, record_size);
     }
 
     free(buffer);
