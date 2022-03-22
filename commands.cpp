@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
   }
 
   if (geteuid() != 0) {
-    // Re-exec with sudo.
+    std::cout << "Re-running as root" << std::endl;
     // TODO: This doesn't need to be in the uncommon case of reading from audit
     // log files owned by the user.
     const char *cmd[argc + 2];
