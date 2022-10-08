@@ -1,6 +1,9 @@
+/*.dSYM
 /auditon
 /auditpipe
 /commands
+/paudit
+/pwait
 
 # Prerequisites
 *.d
