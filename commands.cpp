@@ -182,7 +182,12 @@ int main(int argc, char **argv) {
       }
       std::string full_path{path.path, path.len};
       auto args = shellJoin(full_path, exec_args.text, std::min<uint32_t>(exec_args.count, AUDIT_MAX_ARGS));
-      std::cout << args << std::endl;
+      std::cout << args;
+      bool truncated = exec_env.count >= AUDIT_MAX_ENV || exec_args.count >= AUDIT_MAX_ARGS;
+      if (truncated) {
+        std::cout << " [[WARNING - TRUNCATED]]";
+      }
+      std::cout << std::endl;
     }
 
     free(buffer);
