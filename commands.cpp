@@ -59,6 +59,8 @@ static unique_file_ptr auditpipe() {
   // the `pc` event class includes many other event's we're not interested in,
   // while the `ex` event class has very few events.
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     auto event_num = getauevnonam("AUE_POSIX_SPAWN");
     if (not event_num) {
       return null_file;
@@ -104,6 +106,7 @@ static unique_file_ptr auditpipe() {
     if (getauditflagsbin((char *)"+ex", &masks)) {
       return null_file;
     }
+#pragma clang diagnostic pop
 
     if (ioctl(fd, AUDITPIPE_SET_PRESELECT_FLAGS, &masks)) {
       return null_file;
