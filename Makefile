@@ -1,4 +1,4 @@
-CXXFLAGS := -Wall -std=c++14 -O2 -mmacos-version-min=10.10 -lbsm
+CXXFLAGS := -Wall -std=c++14 -O2 -mmacos-version-min=14.0 -lbsm
 
 all: auditon auditpipe commands paudit pwait
 
