@@ -180,12 +180,17 @@ int main(int argc, char **argv) {
     // If the audit tokens had exec args, print them (and optionally env too).
     if (exec_args.count > 0) {
       if (exec_env.count > 0) {
-        auto env = shellJoin(exec_env.text, exec_env.count);
+        auto env = shellJoin(exec_env.text, std::min<uint32_t>(exec_env.count, AUDIT_MAX_ENV));
         std::cout << env << " ";
       }
       std::string full_path{path.path, path.len};
-      auto args = shellJoin(full_path, exec_args.text, exec_args.count);
-      std::cout << args << std::endl;
+      auto args = shellJoin(full_path, exec_args.text, std::min<uint32_t>(exec_args.count, AUDIT_MAX_ARGS));
+      std::cout << args;
+      bool truncated = exec_env.count >= AUDIT_MAX_ENV || exec_args.count >= AUDIT_MAX_ARGS;
+      if (truncated) {
+        std::cout << " [[WARNING - TRUNCATED]]";
+      }
+      std::cout << std::endl;
     }
 
     free(buffer);
