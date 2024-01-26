@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bsm/libbsm.h>
 #include <iostream>
 #include <security/audit/audit_ioctl.h>
@@ -23,8 +24,10 @@ static std::string shellJoin(char **strings, int count) {
   std::string result{};
   shellAppend(result, strings[0]);
   for (auto i = 1; i < count; ++i) {
-    result.push_back(' ');
-    shellAppend(result, strings[i]);
+    if (strings[i] && strlen(strings[i]) > 0) {
+      result.push_back(' ');
+      shellAppend(result, strings[i]);
+    }
   }
   return result;
 }
